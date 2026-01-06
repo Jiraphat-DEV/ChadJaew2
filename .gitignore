@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Captured media (user-generated)
+captures/
+
+# Backup files
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
