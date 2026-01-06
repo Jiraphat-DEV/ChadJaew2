@@ -1,0 +1,20 @@
+{
+  "name": "chadjaew2",
+  "version": "1.0.0",
+  "description": "Standalone telescope camera streaming system with WebRTC",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "install-system": "sudo ./scripts/install.sh",
+    "setup-ap": "sudo ./scripts/setup-ap.sh"
+  },
+  "keywords": ["telescope", "camera", "webrtc", "raspberry-pi", "streaming"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "ws": "^8.18.3"
+  }
+}

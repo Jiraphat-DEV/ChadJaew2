@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telescope Camera</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Telescope Camera</h1>
+      <div id="status" class="status">Connecting...</div>
+    </header>
+
+    <main>
+      <!-- Video Stream -->
+      <section class="video-section">
+        <div class="video-container">
+          <iframe id="stream" src="" allowfullscreen></iframe>
+          <div id="stream-overlay" class="overlay hidden">
+            <span>Stream Offline</span>
+          </div>
+        </div>
+      </section>
+      <script>
+        // Set iframe src dynamically based on current host
+        document.getElementById('stream').src = 'http://' + window.location.hostname + ':8889/telescope';
+      </script>
+
+      <!-- Controls Panel -->
+      <section class="controls-section">
+        <!-- Presets -->
+        <div class="control-group">
+          <h3>Presets</h3>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="focusing">Focusing</button>
+            <button class="preset-btn" data-preset="planetary">Planetary</button>
+            <button class="preset-btn" data-preset="lunar">Lunar</button>
+            <button class="preset-btn" data-preset="dso">Deep Sky</button>
+          </div>
+        </div>
+
+        <!-- Exposure -->
+        <div class="control-group">
+          <h3>Exposure</h3>
+          <div class="slider-container">
+            <input type="range" id="exposure" min="1" max="10000" value="500" class="slider">
+            <span id="exposure-value" class="slider-value">500</span>
+          </div>
+        </div>
+
+        <!-- Gain -->
+        <div class="control-group">
+          <h3>Gain</h3>
+          <div class="slider-container">
+            <input type="range" id="gain" min="0" max="1023" value="200" class="slider">
+            <span id="gain-value" class="slider-value">200</span>
+          </div>
+        </div>
+
+        <!-- Brightness -->
+        <div class="control-group">
+          <h3>Brightness</h3>
+          <div class="slider-container">
+            <input type="range" id="brightness" min="-64" max="64" value="0" class="slider">
+            <span id="brightness-value" class="slider-value">0</span>
+          </div>
+        </div>
+
+        <!-- Contrast -->
+        <div class="control-group">
+          <h3>Contrast</h3>
+          <div class="slider-container">
+            <input type="range" id="contrast" min="0" max="95" value="32" class="slider">
+            <span id="contrast-value" class="slider-value">32</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Capture Section -->
+      <section class="capture-section">
+        <h3>Capture</h3>
+        <div class="capture-buttons">
+          <button id="btn-photo" class="capture-btn">Take Photo</button>
+          <button id="btn-video" class="capture-btn">Start Recording</button>
+        </div>
+        <div id="recording-status" class="recording-status hidden">
+          <span class="recording-indicator"></span>
+          <span id="recording-time">00:00</span>
+        </div>
+      </section>
+
+      <!-- Gallery -->
+      <section class="gallery-section">
+        <h3>Captures</h3>
+        <div id="gallery" class="gallery">
+          <p class="gallery-empty">No captures yet</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <button id="btn-reset" class="reset-btn">Reset to Defaults</button>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

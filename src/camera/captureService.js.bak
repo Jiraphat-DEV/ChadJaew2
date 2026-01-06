@@ -1,0 +1,210 @@
+const { spawn, exec } = require('child_process');
+const { promisify } = require('util');
+const path = require('path');
+const fs = require('fs');
+
+const execAsync = promisify(exec);
+
+const CAPTURES_DIR = path.join(__dirname, '../../captures');
+const PHOTOS_DIR = path.join(CAPTURES_DIR, 'photos');
+const VIDEOS_DIR = path.join(CAPTURES_DIR, 'videos');
+const RTSP_URL = 'rtsp://localhost:8554/telescope';
+
+class CaptureService {
+  constructor() {
+    this.recordingProcess = null;
+    this.isRecording = false;
+    this.currentVideoFile = null;
+    this.recordingStartTime = null;
+  }
+
+  generateFilename(type, extension) {
+    const now = new Date();
+    const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    return `${type}_${timestamp}.${extension}`;
+  }
+
+  async capturePhoto() {
+    const filename = this.generateFilename('photo', 'jpg');
+    const filepath = path.join(PHOTOS_DIR, filename);
+
+    try {
+      // Capture single frame from the running RTSP stream
+      await execAsync(
+        `ffmpeg -y -rtsp_transport tcp -timeout 3000000 -i "${RTSP_URL}" -frames:v 1 -update 1 -q:v 2 "${filepath}"`,
+        { timeout: 8000 }
+      );
+
+      const stats = fs.statSync(filepath);
+      return {
+        success: true,
+        filename,
+        path: filepath,
+        size: stats.size,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      throw new Error(`Photo capture failed: ${error.message}`);
+    }
+  }
+
+  async startRecording() {
+    if (this.isRecording) {
+      throw new Error('Already recording');
+    }
+
+    const filename = this.generateFilename('video', 'mp4');
+    const filepath = path.join(VIDEOS_DIR, filename);
+
+    // Record from the running RTSP stream (already encoded)
+    this.recordingProcess = spawn('ffmpeg', [
+      '-rtsp_transport', 'tcp',
+      '-i', RTSP_URL,
+      '-c:v', 'copy',
+      '-movflags', '+faststart',
+      filepath
+    ]);
+
+    this.isRecording = true;
+    this.currentVideoFile = filepath;
+    this.recordingStartTime = Date.now();
+
+    this.recordingProcess.on('error', (err) => {
+      console.error('Recording error:', err);
+      this.isRecording = false;
+    });
+
+    this.recordingProcess.on('exit', () => {
+      this.isRecording = false;
+    });
+
+    return {
+      success: true,
+      filename,
+      path: filepath,
+      startTime: new Date().toISOString()
+    };
+  }
+
+  async stopRecording() {
+    if (!this.isRecording || !this.recordingProcess) {
+      throw new Error('Not currently recording');
+    }
+
+    return new Promise((resolve, reject) => {
+      const filepath = this.currentVideoFile;
+      const duration = Math.floor((Date.now() - this.recordingStartTime) / 1000);
+
+      // Send 'q' to ffmpeg for graceful stop
+      this.recordingProcess.stdin.write('q');
+
+      const timeout = setTimeout(() => {
+        this.recordingProcess.kill('SIGTERM');
+      }, 5000);
+
+      this.recordingProcess.on('exit', () => {
+        clearTimeout(timeout);
+        this.isRecording = false;
+        this.recordingProcess = null;
+
+        try {
+          const stats = fs.statSync(filepath);
+          resolve({
+            success: true,
+            filename: path.basename(filepath),
+            path: filepath,
+            size: stats.size,
+            duration,
+            endTime: new Date().toISOString()
+          });
+        } catch (err) {
+          reject(new Error('Video file not found after recording'));
+        }
+      });
+    });
+  }
+
+  getRecordingStatus() {
+    if (!this.isRecording) {
+      return { isRecording: false };
+    }
+
+    return {
+      isRecording: true,
+      filename: path.basename(this.currentVideoFile),
+      duration: Math.floor((Date.now() - this.recordingStartTime) / 1000),
+      startTime: new Date(this.recordingStartTime).toISOString()
+    };
+  }
+
+  async listCaptures(type = 'all') {
+    const result = { photos: [], videos: [] };
+
+    if (type === 'all' || type === 'photos') {
+      try {
+        const photos = fs.readdirSync(PHOTOS_DIR);
+        result.photos = photos
+          .filter(f => f.endsWith('.jpg'))
+          .map(filename => {
+            const filepath = path.join(PHOTOS_DIR, filename);
+            const stats = fs.statSync(filepath);
+            return {
+              filename,
+              size: stats.size,
+              created: stats.birthtime.toISOString()
+            };
+          })
+          .sort((a, b) => new Date(b.created) - new Date(a.created));
+      } catch (err) {
+        // Directory might not exist yet
+      }
+    }
+
+    if (type === 'all' || type === 'videos') {
+      try {
+        const videos = fs.readdirSync(VIDEOS_DIR);
+        result.videos = videos
+          .filter(f => f.endsWith('.mp4'))
+          .map(filename => {
+            const filepath = path.join(VIDEOS_DIR, filename);
+            const stats = fs.statSync(filepath);
+            return {
+              filename,
+              size: stats.size,
+              created: stats.birthtime.toISOString()
+            };
+          })
+          .sort((a, b) => new Date(b.created) - new Date(a.created));
+      } catch (err) {
+        // Directory might not exist yet
+      }
+    }
+
+    return result;
+  }
+
+  getFilePath(filename) {
+    if (filename.startsWith('photo_')) {
+      return path.join(PHOTOS_DIR, filename);
+    } else if (filename.startsWith('video_')) {
+      return path.join(VIDEOS_DIR, filename);
+    }
+    return null;
+  }
+
+  async deleteCapture(filename) {
+    const filepath = this.getFilePath(filename);
+    if (!filepath) {
+      throw new Error('Invalid filename');
+    }
+
+    if (!fs.existsSync(filepath)) {
+      throw new Error('File not found');
+    }
+
+    fs.unlinkSync(filepath);
+    return { success: true, filename };
+  }
+}
+
+module.exports = CaptureService;

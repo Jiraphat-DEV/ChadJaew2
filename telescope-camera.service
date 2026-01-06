@@ -1,0 +1,48 @@
+[Unit]
+Description=Telescope Camera Streaming System
+Documentation=https://github.com/ChadJaew2
+After=network-online.target telescope-ap.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/ChadJaew2
+ExecStart=/usr/bin/node /root/ChadJaew2/server.js
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+# Environment - optimized for low latency
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=NODE_OPTIONS=--max-old-space-size=300 --expose-gc
+Environment=UV_THREADPOOL_SIZE=4
+
+# Priority settings for real-time streaming
+Nice=-10
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=50
+IOSchedulingClass=realtime
+IOSchedulingPriority=0
+
+# Resource limits - optimized for Pi 3 with hardware encoding
+MemoryMax=700M
+MemoryHigh=650M
+MemoryMin=250M
+CPUQuota=95%
+
+# Protect from OOM killer
+OOMScoreAdjust=-500
+
+# Allow more file handles
+LimitNOFILE=65536
+LimitMEMLOCK=infinity
+
+# Real-time limits
+LimitRTPRIO=99
+LimitRTTIME=infinity
+
+[Install]
+WantedBy=multi-user.target

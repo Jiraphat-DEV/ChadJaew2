@@ -1,0 +1,118 @@
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const { spawn } = require('child_process');
+const { WebSocketServer } = require('ws');
+const http = require('http');
+const apiRoutes = require('./src/api/routes');
+
+const PORT = process.env.PORT || 3000;
+const MEDIAMTX_CONFIG = path.join(__dirname, 'mediamtx.yml');
+
+// Initialize Express
+const app = express();
+const server = http.createServer(app);
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API routes
+app.use('/api', apiRoutes);
+
+// WebSocket for real-time updates
+const wss = new WebSocketServer({ server, path: '/ws' });
+
+const broadcast = (type, data) => {
+  const message = JSON.stringify({ type, data, timestamp: Date.now() });
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) {
+      client.send(message);
+    }
+  });
+};
+
+wss.on('connection', (ws) => {
+  console.log('WebSocket client connected');
+  ws.send(JSON.stringify({ type: 'connected', timestamp: Date.now() }));
+
+  ws.on('close', () => {
+    console.log('WebSocket client disconnected');
+  });
+});
+
+// MediaMTX process management
+let mediamtxProcess = null;
+
+const startMediaMTX = () => {
+  console.log('Starting MediaMTX...');
+
+  mediamtxProcess = spawn('mediamtx', [MEDIAMTX_CONFIG], {
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+
+  mediamtxProcess.stdout.on('data', (data) => {
+    const msg = data.toString().trim();
+    if (msg) console.log('[MediaMTX]', msg);
+  });
+
+  mediamtxProcess.stderr.on('data', (data) => {
+    const msg = data.toString().trim();
+    if (msg) console.error('[MediaMTX]', msg);
+  });
+
+  mediamtxProcess.on('error', (err) => {
+    console.error('MediaMTX failed to start:', err.message);
+    broadcast('streamError', { error: err.message });
+  });
+
+  mediamtxProcess.on('exit', (code) => {
+    console.log(`MediaMTX exited with code ${code}`);
+    broadcast('streamStopped', { code });
+
+    // Restart after 5 seconds
+    if (code !== 0) {
+      console.log('Restarting MediaMTX in 5 seconds...');
+      setTimeout(startMediaMTX, 5000);
+    }
+  });
+};
+
+const stopMediaMTX = () => {
+  if (mediamtxProcess) {
+    mediamtxProcess.kill('SIGTERM');
+    mediamtxProcess = null;
+  }
+};
+
+// Graceful shutdown
+const shutdown = () => {
+  console.log('\nShutting down...');
+  stopMediaMTX();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+// Start server
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`
+  ====================================
+  Telescope Camera System Started
+  ====================================
+  Web UI: http://192.168.4.1:${PORT}
+  WebRTC Stream: http://192.168.4.1:8889/telescope
+  API: http://192.168.4.1:${PORT}/api
+  ====================================
+  `);
+
+  // Start MediaMTX
+  startMediaMTX();
+});
+
+module.exports = { app, broadcast };

@@ -1,0 +1,49 @@
+# MediaMTX Configuration for Telescope Camera
+# Ultra Low-latency WebRTC streaming - Optimized for Pi 3
+
+# Logging
+logLevel: warn
+logDestinations: [stdout]
+
+# API (for health checks)
+api: yes
+apiAddress: 127.0.0.1:9997
+
+# WebRTC - Primary streaming protocol (ultra low latency)
+webrtc: yes
+webrtcAddress: :8889
+webrtcAllowOrigins: ['*']
+webrtcICEServers2: []
+
+# RTSP - Used internally for capture
+rtsp: yes
+rtspAddress: :8554
+
+# Minimal buffer settings for lowest latency
+readBufferCount: 256
+writeQueueSize: 128
+
+# Disable unused protocols
+hls: no
+srt: no
+rtmp: no
+
+# Stream paths
+paths:
+  telescope:
+    runOnInit: >
+      ffmpeg -f v4l2 -input_format mjpeg
+      -video_size 640x480 -framerate 30
+      -fflags nobuffer+discardcorrupt+flush_packets
+      -flags low_delay -avioflags direct
+      -thread_queue_size 32 -probesize 32 -analyzeduration 0
+      -i /dev/video0
+      -an
+      -c:v h264_v4l2m2m
+      -pix_fmt yuv420p
+      -b:v 1200k
+      -g 5 -keyint_min 5
+      -bf 0
+      -f rtsp -rtsp_transport tcp
+      rtsp://localhost:$RTSP_PORT/$MTX_PATH
+    runOnInitRestart: yes
