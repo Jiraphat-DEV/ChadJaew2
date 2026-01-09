@@ -3,10 +3,12 @@ const path = require('path');
 const fs = require('fs');
 const V4L2Controller = require('../camera/v4l2Controller');
 const CaptureService = require('../camera/captureService');
+const StreamService = require('../camera/streamService');
 
 const router = express.Router();
 const camera = new V4L2Controller();
 const capture = new CaptureService();
+const stream = new StreamService();
 
 // Initialize capture service directories
 capture.initialize().catch(err => {
@@ -134,6 +136,29 @@ router.get('/stream/status', async (req, res) => {
     res.json({ success: true, paths: data.items });
   } catch (error) {
     res.json({ success: false, error: 'MediaMTX not responding' });
+  }
+});
+
+// Binning control
+router.get('/stream/binning', async (req, res) => {
+  try {
+    const status = await stream.getBinningStatus();
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.post('/stream/binning', async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    if (enabled === undefined) {
+      return res.status(400).json({ success: false, error: 'enabled parameter required' });
+    }
+    const result = await stream.setBinning(enabled);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

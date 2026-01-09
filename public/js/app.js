@@ -10,14 +10,30 @@ const elements = {
   status: document.getElementById('status'),
   stream: document.getElementById('stream'),
   streamOverlay: document.getElementById('stream-overlay'),
+  // Sliders
   exposure: document.getElementById('exposure'),
-  exposureValue: document.getElementById('exposure-value'),
   gain: document.getElementById('gain'),
-  gainValue: document.getElementById('gain-value'),
   brightness: document.getElementById('brightness'),
-  brightnessValue: document.getElementById('brightness-value'),
   contrast: document.getElementById('contrast'),
-  contrastValue: document.getElementById('contrast-value'),
+  // Number inputs
+  exposureInput: document.getElementById('exposure-input'),
+  gainInput: document.getElementById('gain-input'),
+  brightnessInput: document.getElementById('brightness-input'),
+  contrastInput: document.getElementById('contrast-input'),
+  // White Balance
+  autoWhiteBalance: document.getElementById('autoWhiteBalance'),
+  whiteBalanceTemp: document.getElementById('whiteBalanceTemp'),
+  whiteBalanceTempInput: document.getElementById('whiteBalanceTemp-input'),
+  wbTempContainer: document.getElementById('wbTempContainer'),
+  // Focus
+  autoFocus: document.getElementById('autoFocus'),
+  focus: document.getElementById('focus'),
+  focusInput: document.getElementById('focus-input'),
+  focusContainer: document.getElementById('focusContainer'),
+  // Binning
+  binningToggle: document.getElementById('binningToggle'),
+  binningStatus: document.getElementById('binning-status'),
+  // Buttons
   btnPhoto: document.getElementById('btn-photo'),
   btnVideo: document.getElementById('btn-video'),
   btnReset: document.getElementById('btn-reset'),
@@ -31,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initWebSocket();
   loadControls();
   loadCaptures();
+  loadBinningStatus();
   setupEventListeners();
 });
 
@@ -101,31 +118,77 @@ async function loadControls() {
       const controls = data.controls;
 
       if (controls.exposure_time_absolute) {
+        const val = controls.exposure_time_absolute.value;
         elements.exposure.min = controls.exposure_time_absolute.min;
         elements.exposure.max = controls.exposure_time_absolute.max;
-        elements.exposure.value = controls.exposure_time_absolute.value;
-        elements.exposureValue.textContent = controls.exposure_time_absolute.value;
+        elements.exposure.value = val;
+        elements.exposureInput.min = controls.exposure_time_absolute.min;
+        elements.exposureInput.max = controls.exposure_time_absolute.max;
+        elements.exposureInput.value = val;
       }
 
       if (controls.gain) {
+        const val = controls.gain.value;
         elements.gain.min = controls.gain.min;
         elements.gain.max = controls.gain.max;
-        elements.gain.value = controls.gain.value;
-        elements.gainValue.textContent = controls.gain.value;
+        elements.gain.value = val;
+        elements.gainInput.min = controls.gain.min;
+        elements.gainInput.max = controls.gain.max;
+        elements.gainInput.value = val;
       }
 
       if (controls.brightness) {
+        const val = controls.brightness.value;
         elements.brightness.min = controls.brightness.min;
         elements.brightness.max = controls.brightness.max;
-        elements.brightness.value = controls.brightness.value;
-        elements.brightnessValue.textContent = controls.brightness.value;
+        elements.brightness.value = val;
+        elements.brightnessInput.min = controls.brightness.min;
+        elements.brightnessInput.max = controls.brightness.max;
+        elements.brightnessInput.value = val;
       }
 
       if (controls.contrast) {
+        const val = controls.contrast.value;
         elements.contrast.min = controls.contrast.min;
         elements.contrast.max = controls.contrast.max;
-        elements.contrast.value = controls.contrast.value;
-        elements.contrastValue.textContent = controls.contrast.value;
+        elements.contrast.value = val;
+        elements.contrastInput.min = controls.contrast.min;
+        elements.contrastInput.max = controls.contrast.max;
+        elements.contrastInput.value = val;
+      }
+
+      // White Balance Controls
+      if (controls.white_balance_automatic) {
+        const isAuto = controls.white_balance_automatic.value === 1;
+        elements.autoWhiteBalance.checked = isAuto;
+        elements.wbTempContainer.classList.toggle('disabled', isAuto);
+      }
+
+      if (controls.white_balance_temperature) {
+        const val = controls.white_balance_temperature.value;
+        elements.whiteBalanceTemp.min = controls.white_balance_temperature.min;
+        elements.whiteBalanceTemp.max = controls.white_balance_temperature.max;
+        elements.whiteBalanceTemp.value = val;
+        elements.whiteBalanceTempInput.min = controls.white_balance_temperature.min;
+        elements.whiteBalanceTempInput.max = controls.white_balance_temperature.max;
+        elements.whiteBalanceTempInput.value = val;
+      }
+
+      // Focus Controls
+      if (controls.focus_automatic_continuous) {
+        const isAuto = controls.focus_automatic_continuous.value === 1;
+        elements.autoFocus.checked = isAuto;
+        elements.focusContainer.classList.toggle('disabled', isAuto);
+      }
+
+      if (controls.focus_absolute) {
+        const val = controls.focus_absolute.value;
+        elements.focus.min = controls.focus_absolute.min;
+        elements.focus.max = controls.focus_absolute.max;
+        elements.focus.value = val;
+        elements.focusInput.min = controls.focus_absolute.min;
+        elements.focusInput.max = controls.focus_absolute.max;
+        elements.focusInput.value = val;
       }
     }
   } catch (err) {
@@ -146,19 +209,37 @@ function updateControlUI(name, value) {
   switch (name) {
     case 'exposure_time_absolute':
       elements.exposure.value = value;
-      elements.exposureValue.textContent = value;
+      elements.exposureInput.value = value;
       break;
     case 'gain':
       elements.gain.value = value;
-      elements.gainValue.textContent = value;
+      elements.gainInput.value = value;
       break;
     case 'brightness':
       elements.brightness.value = value;
-      elements.brightnessValue.textContent = value;
+      elements.brightnessInput.value = value;
       break;
     case 'contrast':
       elements.contrast.value = value;
-      elements.contrastValue.textContent = value;
+      elements.contrastInput.value = value;
+      break;
+    case 'white_balance_automatic':
+      const isAuto = value === 1;
+      elements.autoWhiteBalance.checked = isAuto;
+      elements.wbTempContainer.classList.toggle('disabled', isAuto);
+      break;
+    case 'white_balance_temperature':
+      elements.whiteBalanceTemp.value = value;
+      elements.whiteBalanceTempInput.value = value;
+      break;
+    case 'focus_automatic_continuous':
+      const isAutoFocus = value === 1;
+      elements.autoFocus.checked = isAutoFocus;
+      elements.focusContainer.classList.toggle('disabled', isAutoFocus);
+      break;
+    case 'focus_absolute':
+      elements.focus.value = value;
+      elements.focusInput.value = value;
       break;
   }
 }
@@ -260,6 +341,50 @@ async function loadCaptures() {
   }
 }
 
+// Binning Control
+async function loadBinningStatus() {
+  try {
+    const data = await api('/stream/binning');
+    if (data.success) {
+      elements.binningToggle.checked = data.binning;
+      updateBinningStatus(data.binning);
+    }
+  } catch (err) {
+    console.error('Failed to load binning status:', err);
+  }
+}
+
+async function setBinning(enabled) {
+  elements.binningToggle.disabled = true;
+  elements.binningStatus.textContent = 'Restarting stream...';
+  elements.binningStatus.classList.remove('active');
+
+  try {
+    const data = await api('/stream/binning', 'POST', { enabled });
+    if (data.success) {
+      updateBinningStatus(data.binning);
+    } else {
+      alert('Failed to change binning: ' + data.error);
+      elements.binningToggle.checked = !enabled;
+    }
+  } catch (err) {
+    alert('Binning error: ' + err.message);
+    elements.binningToggle.checked = !enabled;
+  } finally {
+    elements.binningToggle.disabled = false;
+  }
+}
+
+function updateBinningStatus(enabled) {
+  if (enabled) {
+    elements.binningStatus.textContent = '4x brighter';
+    elements.binningStatus.classList.add('active');
+  } else {
+    elements.binningStatus.textContent = '';
+    elements.binningStatus.classList.remove('active');
+  }
+}
+
 function renderGallery(photos, videos) {
   const items = [
     ...photos.map(p => ({ ...p, type: 'photo' })),
@@ -318,7 +443,7 @@ async function resetDefaults() {
 
 // Event Listeners
 function setupEventListeners() {
-  // Sliders with debounce
+  // Debounce helper
   let debounceTimer;
   const debounce = (fn, delay) => {
     return (...args) => {
@@ -327,24 +452,157 @@ function setupEventListeners() {
     };
   };
 
+  // Control name mapping
+  const controlMap = {
+    exposure: 'exposure_time_absolute',
+    gain: 'gain',
+    brightness: 'brightness',
+    contrast: 'contrast',
+    whiteBalanceTemp: 'white_balance_temperature'
+  };
+
+  // Slider event listeners (sync to number input)
   elements.exposure.addEventListener('input', (e) => {
-    elements.exposureValue.textContent = e.target.value;
+    elements.exposureInput.value = e.target.value;
     debounce(() => setControl('exposure_time_absolute', e.target.value), 100)();
   });
 
   elements.gain.addEventListener('input', (e) => {
-    elements.gainValue.textContent = e.target.value;
+    elements.gainInput.value = e.target.value;
     debounce(() => setControl('gain', e.target.value), 100)();
   });
 
   elements.brightness.addEventListener('input', (e) => {
-    elements.brightnessValue.textContent = e.target.value;
+    elements.brightnessInput.value = e.target.value;
     debounce(() => setControl('brightness', e.target.value), 100)();
   });
 
   elements.contrast.addEventListener('input', (e) => {
-    elements.contrastValue.textContent = e.target.value;
+    elements.contrastInput.value = e.target.value;
     debounce(() => setControl('contrast', e.target.value), 100)();
+  });
+
+  elements.whiteBalanceTemp.addEventListener('input', (e) => {
+    elements.whiteBalanceTempInput.value = e.target.value;
+    debounce(() => setControl('white_balance_temperature', e.target.value), 100)();
+  });
+
+  // Number input event listeners (sync to slider)
+  elements.exposureInput.addEventListener('change', (e) => {
+    const min = parseInt(e.target.min);
+    const max = parseInt(e.target.max);
+    const value = Math.min(Math.max(parseInt(e.target.value) || min, min), max);
+    e.target.value = value;
+    elements.exposure.value = value;
+    setControl('exposure_time_absolute', value);
+  });
+
+  elements.gainInput.addEventListener('change', (e) => {
+    const min = parseInt(e.target.min);
+    const max = parseInt(e.target.max);
+    const value = Math.min(Math.max(parseInt(e.target.value) || min, min), max);
+    e.target.value = value;
+    elements.gain.value = value;
+    setControl('gain', value);
+  });
+
+  elements.brightnessInput.addEventListener('change', (e) => {
+    const min = parseInt(e.target.min);
+    const max = parseInt(e.target.max);
+    const value = Math.min(Math.max(parseInt(e.target.value) || 0, min), max);
+    e.target.value = value;
+    elements.brightness.value = value;
+    setControl('brightness', value);
+  });
+
+  elements.contrastInput.addEventListener('change', (e) => {
+    const min = parseInt(e.target.min);
+    const max = parseInt(e.target.max);
+    const value = Math.min(Math.max(parseInt(e.target.value) || min, min), max);
+    e.target.value = value;
+    elements.contrast.value = value;
+    setControl('contrast', value);
+  });
+
+  elements.whiteBalanceTempInput.addEventListener('change', (e) => {
+    const min = parseInt(e.target.min);
+    const max = parseInt(e.target.max);
+    const value = Math.min(Math.max(parseInt(e.target.value) || min, min), max);
+    e.target.value = value;
+    elements.whiteBalanceTemp.value = value;
+    setControl('white_balance_temperature', value);
+  });
+
+  // Quick buttons
+  document.querySelectorAll('.quick-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const control = btn.dataset.control;
+      const value = parseInt(btn.dataset.value);
+
+      // Update slider and input
+      switch (control) {
+        case 'exposure':
+          elements.exposure.value = value;
+          elements.exposureInput.value = value;
+          setControl('exposure_time_absolute', value);
+          break;
+        case 'gain':
+          elements.gain.value = value;
+          elements.gainInput.value = value;
+          setControl('gain', value);
+          break;
+        case 'brightness':
+          elements.brightness.value = value;
+          elements.brightnessInput.value = value;
+          setControl('brightness', value);
+          break;
+        case 'contrast':
+          elements.contrast.value = value;
+          elements.contrastInput.value = value;
+          setControl('contrast', value);
+          break;
+        case 'whiteBalanceTemp':
+          elements.whiteBalanceTemp.value = value;
+          elements.whiteBalanceTempInput.value = value;
+          setControl('white_balance_temperature', value);
+          break;
+        case 'focus':
+          elements.focus.value = value;
+          elements.focusInput.value = value;
+          setControl('focus_absolute', value);
+          break;
+      }
+    });
+  });
+
+  // White Balance Auto toggle
+  elements.autoWhiteBalance.addEventListener('change', async (e) => {
+    const isAuto = e.target.checked ? 1 : 0;
+    await setControl('white_balance_automatic', isAuto);
+    elements.wbTempContainer.classList.toggle('disabled', e.target.checked);
+  });
+
+  // Focus Auto toggle
+  elements.autoFocus.addEventListener('change', async (e) => {
+    const isAuto = e.target.checked ? 1 : 0;
+    await setControl('focus_automatic_continuous', isAuto);
+    elements.focusContainer.classList.toggle('disabled', e.target.checked);
+  });
+
+  // Focus slider
+  elements.focus.addEventListener('input', (e) => {
+    elements.focusInput.value = e.target.value;
+    debounce(() => setControl('focus_absolute', e.target.value), 100)();
+  });
+
+  // Focus number input
+  elements.focusInput.addEventListener('change', (e) => {
+    const min = parseInt(e.target.min);
+    const max = parseInt(e.target.max);
+    const value = Math.min(Math.max(parseInt(e.target.value) || min, min), max);
+    e.target.value = value;
+    elements.focus.value = value;
+    setControl('focus_absolute', value);
   });
 
   // Preset buttons
@@ -358,4 +616,9 @@ function setupEventListeners() {
 
   // Reset button
   elements.btnReset.addEventListener('click', resetDefaults);
+
+  // Binning toggle
+  elements.binningToggle.addEventListener('change', (e) => {
+    setBinning(e.target.checked);
+  });
 }

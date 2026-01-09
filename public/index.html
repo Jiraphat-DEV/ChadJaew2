@@ -44,37 +44,133 @@
         <!-- Exposure -->
         <div class="control-group">
           <h3>Exposure</h3>
-          <div class="slider-container">
+          <div class="slider-row">
             <input type="range" id="exposure" min="1" max="10000" value="500" class="slider">
-            <span id="exposure-value" class="slider-value">500</span>
+            <input type="number" id="exposure-input" min="1" max="10000" value="500" class="value-input">
+          </div>
+          <div class="quick-buttons">
+            <button class="quick-btn" data-control="exposure" data-value="100">100</button>
+            <button class="quick-btn" data-control="exposure" data-value="500">500</button>
+            <button class="quick-btn" data-control="exposure" data-value="1000">1k</button>
+            <button class="quick-btn" data-control="exposure" data-value="5000">5k</button>
           </div>
         </div>
 
         <!-- Gain -->
         <div class="control-group">
           <h3>Gain</h3>
-          <div class="slider-container">
+          <div class="slider-row">
             <input type="range" id="gain" min="0" max="1023" value="200" class="slider">
-            <span id="gain-value" class="slider-value">200</span>
+            <input type="number" id="gain-input" min="0" max="1023" value="200" class="value-input">
+          </div>
+          <div class="quick-buttons">
+            <button class="quick-btn" data-control="gain" data-value="0">0</button>
+            <button class="quick-btn" data-control="gain" data-value="200">200</button>
+            <button class="quick-btn" data-control="gain" data-value="500">500</button>
+            <button class="quick-btn" data-control="gain" data-value="800">800</button>
           </div>
         </div>
 
         <!-- Brightness -->
         <div class="control-group">
           <h3>Brightness</h3>
-          <div class="slider-container">
+          <div class="slider-row">
             <input type="range" id="brightness" min="-64" max="64" value="0" class="slider">
-            <span id="brightness-value" class="slider-value">0</span>
+            <input type="number" id="brightness-input" min="-64" max="64" value="0" class="value-input">
+          </div>
+          <div class="quick-buttons">
+            <button class="quick-btn" data-control="brightness" data-value="-32">-32</button>
+            <button class="quick-btn" data-control="brightness" data-value="0">0</button>
+            <button class="quick-btn" data-control="brightness" data-value="32">+32</button>
           </div>
         </div>
 
         <!-- Contrast -->
         <div class="control-group">
           <h3>Contrast</h3>
-          <div class="slider-container">
+          <div class="slider-row">
             <input type="range" id="contrast" min="0" max="95" value="32" class="slider">
-            <span id="contrast-value" class="slider-value">32</span>
+            <input type="number" id="contrast-input" min="0" max="95" value="32" class="value-input">
           </div>
+          <div class="quick-buttons">
+            <button class="quick-btn" data-control="contrast" data-value="0">0</button>
+            <button class="quick-btn" data-control="contrast" data-value="32">32</button>
+            <button class="quick-btn" data-control="contrast" data-value="64">64</button>
+          </div>
+        </div>
+
+        <!-- White Balance -->
+        <div class="control-group">
+          <h3>White Balance</h3>
+          <div class="toggle-container">
+            <span class="toggle-label">Auto</span>
+            <label class="switch">
+              <input type="checkbox" id="autoWhiteBalance" checked>
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+          <div class="slider-container" id="wbTempContainer">
+            <div class="slider-row">
+              <input type="range" id="whiteBalanceTemp" min="2800" max="6500" value="4600" class="slider">
+              <input type="number" id="whiteBalanceTemp-input" min="2800" max="6500" value="4600" class="value-input">
+              <span class="unit">K</span>
+            </div>
+            <div class="quick-buttons">
+              <button class="quick-btn" data-control="whiteBalanceTemp" data-value="3200">3200</button>
+              <button class="quick-btn" data-control="whiteBalanceTemp" data-value="4600">4600</button>
+              <button class="quick-btn" data-control="whiteBalanceTemp" data-value="5500">5500</button>
+              <button class="quick-btn" data-control="whiteBalanceTemp" data-value="6500">6500</button>
+            </div>
+            <div class="range-labels">
+              <span>Warm</span>
+              <span>Cool</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Focus -->
+        <div class="control-group">
+          <h3>Focus</h3>
+          <div class="toggle-container">
+            <span class="toggle-label">Auto</span>
+            <label class="switch">
+              <input type="checkbox" id="autoFocus" checked>
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+          <div class="slider-container" id="focusContainer">
+            <div class="slider-row">
+              <input type="range" id="focus" min="0" max="1023" value="500" class="slider">
+              <input type="number" id="focus-input" min="0" max="1023" value="500" class="value-input">
+            </div>
+            <div class="quick-buttons">
+              <button class="quick-btn" data-control="focus" data-value="0">0</button>
+              <button class="quick-btn" data-control="focus" data-value="256">256</button>
+              <button class="quick-btn" data-control="focus" data-value="512">512</button>
+              <button class="quick-btn" data-control="focus" data-value="768">768</button>
+              <button class="quick-btn" data-control="focus" data-value="1023">Max</button>
+            </div>
+            <div class="range-labels">
+              <span>Near</span>
+              <span>Far</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stream Settings -->
+      <section class="controls-section">
+        <div class="control-group">
+          <h3>2x2 Binning (for f/10 scopes)</h3>
+          <div class="toggle-container">
+            <span class="toggle-label">Enable</span>
+            <label class="switch">
+              <input type="checkbox" id="binningToggle">
+              <span class="slider-toggle"></span>
+            </label>
+            <span id="binning-status" class="binning-status"></span>
+          </div>
+          <p class="control-hint">Combines 4 pixels into 1 for ~4x brightness. Stream will briefly restart.</p>
         </div>
       </section>
 

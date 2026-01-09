@@ -12,28 +12,42 @@ const PRESETS = {
     exposure_time_absolute: 100,
     gain: 200,
     gamma: 100,
-    sharpness: 5
+    sharpness: 5,
+    white_balance_automatic: 0,
+    white_balance_temperature: 4600,
+    focus_automatic_continuous: 0,
+    focus_absolute: 512
   },
   lunar: {
     auto_exposure: 1,
     exposure_time_absolute: 50,
     gain: 100,
     gamma: 90,
-    sharpness: 3
+    sharpness: 3,
+    white_balance_automatic: 0,
+    white_balance_temperature: 5000,
+    focus_automatic_continuous: 0,
+    focus_absolute: 512
   },
   dso: {
     auto_exposure: 1,
     exposure_time_absolute: 5000,
     gain: 800,
     gamma: 150,
-    sharpness: 0
+    sharpness: 0,
+    white_balance_automatic: 0,
+    white_balance_temperature: 5500,
+    focus_automatic_continuous: 0,
+    focus_absolute: 512
   },
   focusing: {
     auto_exposure: 1,
     exposure_time_absolute: 500,
     gain: 400,
     gamma: 110,
-    sharpness: 7
+    sharpness: 7,
+    white_balance_automatic: 1,
+    focus_automatic_continuous: 1
   }
 };
 
@@ -93,6 +107,16 @@ class V4L2Controller {
     // For exposure, ensure manual mode first
     if (name === 'exposure_time_absolute') {
       await this.runCommand(`v4l2-ctl -d ${this.device} -c auto_exposure=1`);
+    }
+
+    // For white balance temperature, ensure manual WB mode first
+    if (name === 'white_balance_temperature') {
+      await this.runCommand(`v4l2-ctl -d ${this.device} -c white_balance_automatic=0`);
+    }
+
+    // For focus absolute, ensure manual focus mode first
+    if (name === 'focus_absolute') {
+      await this.runCommand(`v4l2-ctl -d ${this.device} -c focus_automatic_continuous=0`);
     }
 
     await this.runCommand(`v4l2-ctl -d ${this.device} -c ${name}=${value}`);
